@@ -31,13 +31,19 @@ export default class EnvelopeScene extends Phaser.Scene {
     envelopeSprite.setOrigin(0.5, 0.5);
     envelopeSprite.setDisplaySize(400, 400);
     
-    // Create animation with 9 frames - INCREASED frameRate for smoother animation
-    this.anims.create({
-      key: 'envelope-open',
-      frames: this.anims.generateFrameNumbers('envelope-animation', { start: 0, end: 8 }),
-      frameRate: 18, // Increased from 12 to 18 for smoother animation
-      repeat: 0
-    });
+    // Set to frame 0 (closed envelope)
+    envelopeSprite.setFrame(0);
+    
+    // Create animation with 9 frames - Super smooth animation
+    if (!this.anims.exists('envelope-open')) {
+      this.anims.create({
+        key: 'envelope-open',
+        frames: this.anims.generateFrameNumbers('envelope-animation', { start: 0, end: 8 }),
+        frameRate: 24, // Increased to 24 FPS for super smooth animation
+        repeat: 0, // Play only once
+        hideOnComplete: false // Keep last frame visible
+      });
+    }
     
     this.envelopeSprites.push(envelopeSprite);
 
@@ -77,11 +83,23 @@ export default class EnvelopeScene extends Phaser.Scene {
     this.openSound?.play();
 
     const sprite = this.envelopeSprites[0];
+    
+    console.log('Starting envelope animation');
+    
+    // Stop any existing animation first
+    sprite.stop();
+    
+    // Play animation once
     sprite.play('envelope-open');
     
-    // Use once to prevent multiple transitions
+    // Use once to ensure this only fires one time
     sprite.once('animationcomplete', () => {
-      // Reduced delay from 1000 to 300ms for faster transition
+      console.log('Envelope animation complete - transitioning to letter');
+      
+      // Stop the animation to prevent any looping
+      sprite.stop();
+      
+      // Reduced delay for faster transition
       this.time.delayedCall(300, () => {
         this.scene.start('LetterScene');
       });
