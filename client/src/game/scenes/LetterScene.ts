@@ -23,6 +23,7 @@ export default class LetterScene extends Phaser.Scene {
     background.setOrigin(0, 0);
 
     this.letter = this.add.image(width / 2, -400, 'letter');
+    this.letter.setOrigin(0.5, 0.5); // Set origin to center
     this.letter.setDisplaySize(Math.min(width * 0.8, 500), Math.min(width * 0.8 * 1.5, 750));
 
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });

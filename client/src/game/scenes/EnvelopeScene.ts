@@ -28,6 +28,7 @@ export default class EnvelopeScene extends Phaser.Scene {
 
     // Create animated sprite using the spritesheet
     const envelopeSprite = this.add.sprite(width / 2, height / 2, 'envelope-animation');
+    envelopeSprite.setOrigin(0.5, 0.5); // Set origin to center
     envelopeSprite.setDisplaySize(400, 400);
     
     // Create animation with 9 frames (horizontal sprite sheet)
