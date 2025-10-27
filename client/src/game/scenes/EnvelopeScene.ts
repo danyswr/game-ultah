@@ -28,14 +28,14 @@ export default class EnvelopeScene extends Phaser.Scene {
 
     // Create animated sprite using the spritesheet
     const envelopeSprite = this.add.sprite(width / 2, height / 2, 'envelope-animation');
-    envelopeSprite.setOrigin(0.5, 0.5); // Set origin to center
+    envelopeSprite.setOrigin(0.5, 0.5);
     envelopeSprite.setDisplaySize(400, 400);
     
-    // Create animation with 9 frames (horizontal sprite sheet)
+    // Create animation with 9 frames - INCREASED frameRate for smoother animation
     this.anims.create({
       key: 'envelope-open',
       frames: this.anims.generateFrameNumbers('envelope-animation', { start: 0, end: 8 }),
-      frameRate: 12,
+      frameRate: 18, // Increased from 12 to 18 for smoother animation
       repeat: 0
     });
     
@@ -59,7 +59,8 @@ export default class EnvelopeScene extends Phaser.Scene {
 
     this.openSound = this.sound.add('envelope-open', { volume: 0.5 });
 
-    this.input.on('pointerdown', () => {
+    // Use once to prevent multiple calls
+    this.input.once('pointerdown', () => {
       if (!this.animating) {
         this.playAnimation();
       }
@@ -78,8 +79,10 @@ export default class EnvelopeScene extends Phaser.Scene {
     const sprite = this.envelopeSprites[0];
     sprite.play('envelope-open');
     
-    sprite.on('animationcomplete', () => {
-      this.time.delayedCall(1000, () => {
+    // Use once to prevent multiple transitions
+    sprite.once('animationcomplete', () => {
+      // Reduced delay from 1000 to 300ms for faster transition
+      this.time.delayedCall(300, () => {
         this.scene.start('LetterScene');
       });
     });
