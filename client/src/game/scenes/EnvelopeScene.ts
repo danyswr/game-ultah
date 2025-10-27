@@ -5,6 +5,7 @@ export default class EnvelopeScene extends Phaser.Scene {
   private envelopeSprites: Phaser.GameObjects.Sprite[] = [];
   private animating: boolean = false;
   private tapText?: Phaser.GameObjects.Text;
+  private openSound?: Phaser.Sound.BaseSound;
 
   constructor() {
     super({ key: 'EnvelopeScene' });
@@ -12,6 +13,7 @@ export default class EnvelopeScene extends Phaser.Scene {
 
   preload() {
     this.load.image('envelope-spritesheet', '/assets/envelope-spritesheet.png');
+    this.load.audio('envelope-open', '/sounds/success.mp3');
   }
 
   create() {
@@ -54,6 +56,8 @@ export default class EnvelopeScene extends Phaser.Scene {
       repeat: -1
     });
 
+    this.openSound = this.sound.add('envelope-open', { volume: 0.5 });
+
     this.input.on('pointerdown', () => {
       if (!this.animating) {
         this.playAnimation();
@@ -67,6 +71,8 @@ export default class EnvelopeScene extends Phaser.Scene {
     if (this.tapText) {
       this.tapText.setVisible(false);
     }
+
+    this.openSound?.play();
 
     const animateFrame = (frameIndex: number) => {
       if (frameIndex >= this.envelopeSprites.length) {

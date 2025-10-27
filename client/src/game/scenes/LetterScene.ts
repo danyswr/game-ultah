@@ -4,6 +4,7 @@ export default class LetterScene extends Phaser.Scene {
   private letter?: Phaser.GameObjects.Image;
   private tapText?: Phaser.GameObjects.Text;
   private canProceed: boolean = false;
+  private slideSound?: Phaser.Sound.BaseSound;
 
   constructor() {
     super({ key: 'LetterScene' });
@@ -11,6 +12,7 @@ export default class LetterScene extends Phaser.Scene {
 
   preload() {
     this.load.image('letter', '/assets/letter.png');
+    this.load.audio('letter-slide', '/sounds/success.mp3');
   }
 
   create() {
@@ -22,6 +24,9 @@ export default class LetterScene extends Phaser.Scene {
 
     this.letter = this.add.image(width / 2, -400, 'letter');
     this.letter.setDisplaySize(Math.min(width * 0.8, 500), Math.min(width * 0.8 * 1.5, 750));
+
+    this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
+    this.slideSound.play();
 
     this.tweens.add({
       targets: this.letter,
