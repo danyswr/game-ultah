@@ -19,22 +19,40 @@ export default class LetterScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    // Background
     const background = this.add.rectangle(0, 0, width, height, 0xf5e6d3);
     background.setOrigin(0, 0);
 
-    this.letter = this.add.image(width / 2, -400, 'letter');
-    this.letter.setOrigin(0.5, 0.5); // Set origin to center
-    this.letter.setDisplaySize(Math.min(width * 0.8, 500), Math.min(width * 0.8 * 1.5, 750));
+    // Create letter - start from top (off screen)
+    this.letter = this.add.image(width / 2, -300, 'letter');
+    
+    // Set origin to center (0.5, 0.5 is default but let's be explicit)
+    this.letter.setOrigin(0.5, 0.5);
+    
+    // Scale the letter to fit nicely on screen
+    // Keep aspect ratio and make it readable
+    const maxWidth = width * 0.85;  // Increased from 0.7 to 0.85
+    const maxHeight = height * 0.85; // Increased from 0.8 to 0.85
+    
+    const letterScale = Math.min(maxWidth / this.letter.width, maxHeight / this.letter.height);
+    this.letter.setScale(letterScale);
 
+    console.log('Letter created at position:', this.letter.x, this.letter.y);
+    console.log('Letter scale:', letterScale);
+    console.log('Screen size:', width, height);
+
+    // Play sound
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
     this.slideSound.play();
 
+    // Animate letter sliding down to center
     this.tweens.add({
       targets: this.letter,
       y: height / 2,
       duration: 1500,
       ease: 'Cubic.easeOut',
       onComplete: () => {
+        console.log('Letter animation complete. Final position:', this.letter?.x, this.letter?.y);
         this.canProceed = true;
         this.showTapText();
       }
@@ -55,6 +73,7 @@ export default class LetterScene extends Phaser.Scene {
     });
     this.tapText.setOrigin(0.5);
 
+    // Blinking animation
     this.tweens.add({
       targets: this.tapText,
       alpha: 0.5,
@@ -63,9 +82,11 @@ export default class LetterScene extends Phaser.Scene {
       repeat: -1
     });
 
+    // Click to proceed
     this.input.on('pointerdown', () => {
       if (this.canProceed) {
         this.canProceed = false;
+        console.log('Proceeding to RPG Scene');
         this.scene.start('RPGScene');
       }
     });

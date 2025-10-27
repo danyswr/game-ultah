@@ -13,8 +13,8 @@ export default class EnvelopeScene extends Phaser.Scene {
 
   preload() {
     this.load.spritesheet('envelope-animation', '/assets/envelope-spritesheet.png', {
-      frameWidth: 200,
-      frameHeight: 200
+      frameWidth: 341,
+      frameHeight: 341
     });
     this.load.audio('envelope-open', '/sounds/success.mp3');
   }
