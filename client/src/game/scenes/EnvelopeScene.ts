@@ -12,7 +12,10 @@ export default class EnvelopeScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('envelope-spritesheet', '/assets/envelope-spritesheet.png');
+    this.load.spritesheet('envelope-animation', '/assets/envelope-spritesheet.png', {
+      frameWidth: 200,
+      frameHeight: 200
+    });
     this.load.audio('envelope-open', '/sounds/success.mp3');
   }
 
@@ -23,22 +26,19 @@ export default class EnvelopeScene extends Phaser.Scene {
     const background = this.add.rectangle(0, 0, width, height, 0xf5e6d3);
     background.setOrigin(0, 0);
 
-    const spriteWidth = 683;
-    const spriteHeight = 683;
-    const totalFrames = 9;
-    const cols = 3;
-
-    for (let i = 0; i < totalFrames; i++) {
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-      
-      const sprite = this.add.sprite(width / 2, height / 2, 'envelope-spritesheet');
-      sprite.setCrop(col * spriteWidth, row * spriteHeight, spriteWidth, spriteHeight);
-      sprite.setDisplaySize(400, 400);
-      sprite.setVisible(i === 0);
-      
-      this.envelopeSprites.push(sprite);
-    }
+    // Create animated sprite using the spritesheet
+    const envelopeSprite = this.add.sprite(width / 2, height / 2, 'envelope-animation');
+    envelopeSprite.setDisplaySize(400, 400);
+    
+    // Create animation with 9 frames (horizontal sprite sheet)
+    this.anims.create({
+      key: 'envelope-open',
+      frames: this.anims.generateFrameNumbers('envelope-animation', { start: 0, end: 8 }),
+      frameRate: 12,
+      repeat: 0
+    });
+    
+    this.envelopeSprites.push(envelopeSprite);
 
     this.tapText = this.add.text(width / 2, height - 100, 'Tap untuk membuka surat', {
       fontSize: '24px',
@@ -74,23 +74,13 @@ export default class EnvelopeScene extends Phaser.Scene {
 
     this.openSound?.play();
 
-    const animateFrame = (frameIndex: number) => {
-      if (frameIndex >= this.envelopeSprites.length) {
-        this.time.delayedCall(1000, () => {
-          this.scene.start('LetterScene');
-        });
-        return;
-      }
-
-      this.envelopeSprites.forEach((sprite, index) => {
-        sprite.setVisible(index === frameIndex);
+    const sprite = this.envelopeSprites[0];
+    sprite.play('envelope-open');
+    
+    sprite.on('animationcomplete', () => {
+      this.time.delayedCall(1000, () => {
+        this.scene.start('LetterScene');
       });
-
-      this.time.delayedCall(111, () => {
-        animateFrame(frameIndex + 1);
-      });
-    };
-
-    animateFrame(0);
+    });
   }
 }
