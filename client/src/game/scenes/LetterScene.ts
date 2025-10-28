@@ -6,6 +6,8 @@ export default class LetterScene extends Phaser.Scene {
   private canProceed: boolean = false;
   private slideSound?: Phaser.Sound.BaseSound;
   private clickHandled: boolean = false;
+  private sparkleParticles: Phaser.GameObjects.Particles.ParticleEmitter[] = [];
+  private proceedButton?: Phaser.GameObjects.Container;
 
   constructor() {
     super({ key: 'LetterScene' });
@@ -14,6 +16,18 @@ export default class LetterScene extends Phaser.Scene {
   preload() {
     this.load.image('letter', '/assets/letter.png');
     this.load.audio('letter-slide', '/sounds/success.mp3');
+    
+    this.createSparkleTexture();
+  }
+
+  private createSparkleTexture() {
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0xFFD700, 1);
+    graphics.fillCircle(4, 4, 3);
+    graphics.fillRect(2, 4, 4, 1);
+    graphics.fillRect(4, 2, 1, 4);
+    graphics.generateTexture('sparkle', 8, 8);
+    graphics.destroy();
   }
 
   create() {
@@ -22,9 +36,7 @@ export default class LetterScene extends Phaser.Scene {
 
     this.clickHandled = false;
 
-    // Background
-    const background = this.add.rectangle(0, 0, width, height, 0xf5e6d3);
-    background.setOrigin(0, 0);
+    this.createParallaxBackground(width, height);
 
     // Create letter - start from top (off screen)
     this.letter = this.add.image(width / 2, -300, 'letter');
@@ -47,17 +59,80 @@ export default class LetterScene extends Phaser.Scene {
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
     this.slideSound.play();
 
-    // Animate letter sliding down to center - FASTER animation (800ms instead of 1500ms)
+    // Animate letter sliding down to center with sparkles
     this.tweens.add({
       targets: this.letter,
       y: height / 2,
-      duration: 800, // Reduced from 1500 to 800 for faster appearance
+      duration: 800,
       ease: 'Cubic.easeOut',
       onComplete: () => {
         console.log('Letter animation complete. Final position:', this.letter?.x, this.letter?.y);
+        this.createSparkleEffect();
         this.canProceed = true;
         this.showTapText();
       }
+    });
+  }
+
+  private createParallaxBackground(width: number, height: number) {
+    const bg1 = this.add.rectangle(0, 0, width, height, 0xf5e6d3);
+    bg1.setOrigin(0, 0);
+    
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0xFFD700, 0.05);
+    
+    for (let i = 0; i < 30; i++) {
+      const x = Phaser.Math.Between(0, width);
+      const y = Phaser.Math.Between(0, height);
+      const size = Phaser.Math.Between(20, 60);
+      
+      graphics.fillCircle(x, y, size);
+    }
+    
+    const bg2 = this.add.rectangle(0, 0, width, height, 0xFFE4B5, 0.1);
+    bg2.setOrigin(0, 0);
+    
+    this.tweens.add({
+      targets: bg2,
+      alpha: 0.05,
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+  }
+
+  private createSparkleEffect() {
+    if (!this.letter) return;
+    
+    const positions = [
+      { x: this.letter.x - this.letter.displayWidth / 3, y: this.letter.y - this.letter.displayHeight / 3 },
+      { x: this.letter.x + this.letter.displayWidth / 3, y: this.letter.y - this.letter.displayHeight / 3 },
+      { x: this.letter.x - this.letter.displayWidth / 3, y: this.letter.y + this.letter.displayHeight / 3 },
+      { x: this.letter.x + this.letter.displayWidth / 3, y: this.letter.y + this.letter.displayHeight / 3 },
+    ];
+    
+    positions.forEach((pos, index) => {
+      this.time.delayedCall(index * 150, () => {
+        const emitter = this.add.particles(pos.x, pos.y, 'sparkle', {
+          speed: { min: 50, max: 100 },
+          angle: { min: 0, max: 360 },
+          scale: { start: 1.2, end: 0 },
+          alpha: { start: 1, end: 0 },
+          lifespan: 600,
+          quantity: 8,
+          frequency: -1
+        });
+        
+        emitter.setDepth(999);
+        emitter.explode(8);
+        
+        this.sparkleParticles.push(emitter);
+        
+        this.time.delayedCall(1000, () => {
+          emitter.destroy();
+        });
+      });
     });
   }
 
@@ -65,40 +140,76 @@ export default class LetterScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    this.tapText = this.add.text(width / 2, height - 80, 'Tap untuk melanjutkan ke permainan', {
-      fontSize: '20px',
-      color: '#8B4513',
+    const buttonBg = this.add.rectangle(0, 0, 320, 60, 0xFF6B9D, 1);
+    buttonBg.setStrokeStyle(3, 0xFFFFFF);
+    
+    const buttonText = this.add.text(0, 0, '🎮 Mulai Permainan 🎮', {
+      fontSize: '22px',
+      color: '#FFFFFF',
       fontFamily: 'Arial',
-      fontStyle: 'bold',
-      backgroundColor: '#ffffff',
-      padding: { x: 20, y: 10 }
+      fontStyle: 'bold'
     });
-    this.tapText.setOrigin(0.5);
-
-    // Blinking animation
+    buttonText.setOrigin(0.5);
+    
+    this.proceedButton = this.add.container(width / 2, height - 80, [buttonBg, buttonText]);
+    this.proceedButton.setDepth(100);
+    this.proceedButton.setAlpha(0);
+    this.proceedButton.setScale(0.8);
+    
     this.tweens.add({
-      targets: this.tapText,
-      alpha: 0.5,
-      duration: 700,
+      targets: this.proceedButton,
+      alpha: 1,
+      scale: 1,
+      duration: 500,
+      ease: 'Back.easeOut'
+    });
+    
+    this.tweens.add({
+      targets: this.proceedButton,
+      y: height - 85,
+      duration: 800,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
+      ease: 'Sine.easeInOut'
     });
 
-    // Use once to prevent multiple calls - FIX for the 2x loop issue
-    this.input.once('pointerdown', () => {
+    buttonBg.setInteractive({ useHandCursor: true });
+    
+    buttonBg.on('pointerover', () => {
+      this.tweens.add({
+        targets: this.proceedButton,
+        scale: 1.1,
+        duration: 200,
+        ease: 'Back.easeOut'
+      });
+    });
+    
+    buttonBg.on('pointerout', () => {
+      this.tweens.add({
+        targets: this.proceedButton,
+        scale: 1,
+        duration: 200
+      });
+    });
+    
+    buttonBg.once('pointerdown', () => {
       if (this.canProceed && !this.clickHandled) {
         this.clickHandled = true;
         this.canProceed = false;
         console.log('Proceeding to RPG Scene');
         
-        // Hide text immediately
-        if (this.tapText) {
-          this.tapText.setVisible(false);
-        }
-        
-        // Quick transition to RPG Scene
-        this.time.delayedCall(100, () => {
-          this.scene.start('RPGScene');
+        this.tweens.add({
+          targets: this.proceedButton,
+          scale: 0.9,
+          duration: 100,
+          yoyo: true,
+          onComplete: () => {
+            this.cameras.main.fadeOut(300, 245, 230, 211);
+            
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+              this.scene.start('RPGScene');
+            });
+          }
         });
       }
     });

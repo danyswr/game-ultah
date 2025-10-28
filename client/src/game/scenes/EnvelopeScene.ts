@@ -6,6 +6,7 @@ export default class EnvelopeScene extends Phaser.Scene {
   private animating: boolean = false;
   private tapText?: Phaser.GameObjects.Text;
   private openSound?: Phaser.Sound.BaseSound;
+  private confettiParticles?: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor() {
     super({ key: 'EnvelopeScene' });
@@ -17,6 +18,22 @@ export default class EnvelopeScene extends Phaser.Scene {
       frameHeight: 341
     });
     this.load.audio('envelope-open', '/sounds/success.mp3');
+    
+    this.createConfettiTexture();
+  }
+
+  private createConfettiTexture() {
+    const graphics = this.add.graphics();
+    const colors = [0xFF1744, 0xF50057, 0xD500F9, 0x651FFF, 0x3D5AFE, 0x2979FF, 0x00B0FF, 0x00E5FF, 0x1DE9B6, 0x00E676, 0x76FF03, 0xC6FF00, 0xFFEA00, 0xFFC400, 0xFF9100, 0xFF3D00];
+    
+    colors.forEach((color, index) => {
+      graphics.clear();
+      graphics.fillStyle(color, 1);
+      graphics.fillRect(0, 0, 8, 8);
+      graphics.generateTexture(`confetti${index}`, 8, 8);
+    });
+    
+    graphics.destroy();
   }
 
   create() {
@@ -86,23 +103,72 @@ export default class EnvelopeScene extends Phaser.Scene {
     
     console.log('Starting envelope animation');
     
-    // Stop any existing animation first
-    sprite.stop();
+    this.cameras.main.zoomTo(1.15, 400, 'Cubic.easeInOut');
     
-    // Play animation once
+    sprite.stop();
     sprite.play('envelope-open');
     
-    // Use once to ensure this only fires one time
     sprite.once('animationcomplete', () => {
-      console.log('Envelope animation complete - transitioning to letter');
+      console.log('Envelope animation complete - adding celebration effects');
       
-      // Stop the animation to prevent any looping
       sprite.stop();
       
-      // Reduced delay for faster transition
-      this.time.delayedCall(300, () => {
-        this.scene.start('LetterScene');
+      this.createScreenFlash();
+      this.createConfettiExplosion();
+      
+      this.time.delayedCall(1200, () => {
+        this.cameras.main.fadeOut(500, 245, 230, 211);
+        
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          this.scene.start('LetterScene');
+        });
       });
     });
+  }
+
+  private createScreenFlash() {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    
+    const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xFFFFFF, 0);
+    flash.setDepth(1000);
+    
+    this.tweens.add({
+      targets: flash,
+      alpha: 0.6,
+      duration: 100,
+      yoyo: true,
+      onComplete: () => {
+        flash.destroy();
+      }
+    });
+  }
+
+  private createConfettiExplosion() {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    
+    for (let i = 0; i < 16; i++) {
+      const confettiTexture = `confetti${i}`;
+      
+      const emitter = this.add.particles(width / 2, height / 2, confettiTexture, {
+        speed: { min: 200, max: 400 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 1.5, end: 0.5 },
+        alpha: { start: 1, end: 0 },
+        lifespan: 2000,
+        gravityY: 300,
+        rotate: { min: 0, max: 360 },
+        frequency: -1,
+        quantity: 3
+      });
+      
+      emitter.setDepth(999);
+      emitter.explode(3);
+      
+      this.time.delayedCall(2500, () => {
+        emitter.destroy();
+      });
+    }
   }
 }
