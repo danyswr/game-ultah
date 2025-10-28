@@ -40,33 +40,16 @@ export default class RPGScene extends Phaser.Scene {
 
   preload() {
     this.load.image('rpg-map', '/assets/forest-map.png');
-    this.load.image('character', '/assets/character2.png');
+    this.load.spritesheet('girl-walking', '/assets/girl-walking.png', {
+      frameWidth: 96,
+      frameHeight: 128
+    });
     this.load.image('npc', '/assets/character1.png');
+    this.load.image('heart-sprite', '/assets/heart-sprite.png');
     this.load.audio('rpg-music', '/sounds/background.mp3');
     this.load.audio('collect', '/sounds/success.mp3');
     
-    this.createHeartTexture();
     this.createParticleTexture();
-  }
-
-  private createHeartTexture() {
-    const graphics = this.add.graphics();
-    
-    graphics.fillStyle(0xFF1744, 1);
-    graphics.beginPath();
-    graphics.arc(12, 10, 6, Math.PI, 0, false);
-    graphics.arc(20, 10, 6, Math.PI, 0, false);
-    graphics.lineTo(26, 16);
-    graphics.lineTo(16, 26);
-    graphics.lineTo(6, 16);
-    graphics.closePath();
-    graphics.fillPath();
-    
-    graphics.lineStyle(2, 0xFF69B4, 1);
-    graphics.strokePath();
-    
-    graphics.generateTexture('heart', 32, 32);
-    graphics.destroy();
   }
 
   private createParticleTexture() {
@@ -89,9 +72,26 @@ export default class RPGScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     map.setScale(scale);
 
-    this.player = this.add.sprite(width / 2, height * 0.9, 'character');
-    this.player.setScale(0.3);
+    this.player = this.add.sprite(width / 2, height * 0.9, 'girl-walking', 0);
+    this.player.setScale(0.4);
     this.player.setDepth(10);
+    
+    if (!this.anims.exists('girl-walk')) {
+      this.anims.create({
+        key: 'girl-walk',
+        frames: this.anims.generateFrameNumbers('girl-walking', { start: 0, end: 3 }),
+        frameRate: 8,
+        repeat: -1
+      });
+    }
+    
+    if (!this.anims.exists('girl-idle')) {
+      this.anims.create({
+        key: 'girl-idle',
+        frames: [{ key: 'girl-walking', frame: 0 }],
+        frameRate: 1
+      });
+    }
 
     this.cursors = this.input.keyboard?.createCursorKeys();
     
@@ -244,7 +244,7 @@ export default class RPGScene extends Phaser.Scene {
     ];
     
     tokenPositions.forEach((pos, index) => {
-      const token = this.add.sprite(pos.x, pos.y, 'heart');
+      const token = this.add.sprite(pos.x, pos.y, 'heart-sprite');
       token.setScale(1.2);
       token.setDepth(8);
       
@@ -365,21 +365,11 @@ export default class RPGScene extends Phaser.Scene {
     this.lastDirection = newDirection;
 
     if (moving) {
-      if (!this.walkingTween || !this.walkingTween.isPlaying()) {
-        this.walkingTween = this.tweens.add({
-          targets: this.player,
-          scaleY: 0.32,
-          duration: 150,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.easeInOut'
-        });
+      if (!this.player.anims.isPlaying) {
+        this.player.play('girl-walk');
       }
     } else {
-      if (this.walkingTween) {
-        this.walkingTween.stop();
-        this.player.setScale(0.3);
-      }
+      this.player.play('girl-idle', true);
     }
 
     this.tokens.forEach((tokenObj, index) => {
@@ -430,19 +420,21 @@ export default class RPGScene extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.interactionKey!)) {
-          let message = '';
-          
           if (this.tokensCollected < this.totalTokens) {
-            message = `Hei! Kamu sudah menemukan ${this.tokensCollected}/${this.totalTokens} hati! Terus cari ya, aku tunggu kamu di sini! 💕`;
+            const message = `Hei! Kamu sudah menemukan ${this.tokensCollected}/${this.totalTokens} hati! Terus cari ya, aku tunggu kamu di sini! 💕`;
+            
+            this.scene.pause();
+            this.scene.launch('DialogScene', { 
+              message: message,
+              scene: this
+            });
           } else {
-            message = 'Selamat! Kamu sudah menemukan semua hati! 💖\n\nSelamat ulang tahun yang ke-21, Kayla! Terima kasih sudah bermain dan menemukan semua hati yang aku tinggalkan untukmu. Semoga hari-harimu selalu penuh cinta dan kebahagiaan! 💝';
+            this.cameras.main.fadeOut(800, 255, 228, 225);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+              this.bgMusic?.stop();
+              this.scene.start('HugScene');
+            });
           }
-          
-          this.scene.pause();
-          this.scene.launch('DialogScene', { 
-            message: message,
-            scene: this
-          });
         }
       } else {
         this.isNearNPC = false;
@@ -463,7 +455,7 @@ export default class RPGScene extends Phaser.Scene {
     
     this.sound.play('collect', { volume: 0.5 });
     
-    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'heart', {
+    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'heart-sprite', {
       speed: { min: 100, max: 200 },
       angle: { min: 0, max: 360 },
       scale: { start: 1, end: 0 },

@@ -3,6 +3,7 @@ import EnvelopeScene from './scenes/EnvelopeScene';
 import LetterScene from './scenes/LetterScene';
 import RPGScene from './scenes/RPGScene';
 import DialogScene from './scenes/DialogScene';
+import HugScene from './scenes/HugScene';
 
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -17,7 +18,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false
     }
   },
-  scene: [EnvelopeScene, LetterScene, RPGScene, DialogScene],
+  scene: [EnvelopeScene, LetterScene, RPGScene, DialogScene, HugScene],
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH
