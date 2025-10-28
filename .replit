@@ -1,9 +1,9 @@
-modules = ["nodejs-20", "bash", "web"]
+modules = ["nodejs-20", "web"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
-channel = "stable-24_05"
+channel = "stable-25_05"
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -13,10 +13,6 @@ run = ["npm", "run", "start"]
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 33639
-externalPort = 3002
 
 [[ports]]
 localPort = 37127
@@ -29,6 +25,10 @@ externalPort = 3000
 [[ports]]
 localPort = 45649
 externalPort = 3001
+
+[[ports]]
+localPort = 45889
+externalPort = 3002
 
 [workflows]
 runButton = "Project"
@@ -46,13 +46,13 @@ args = "Start Game"
 name = "Start Game"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [agent]
 expertMode = true
