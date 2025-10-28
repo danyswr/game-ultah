@@ -1,8 +1,35 @@
 # Overview
 
-This is a birthday gift web application created for Kayla's 21st birthday. The application is an interactive, multi-scene experience built with Phaser 3 game engine. It starts with an animated envelope opening sequence, transitions to a letter display, and concludes with a playable RPG-style game where the user can explore a map using a character sprite.
+This is a birthday gift web application created for Kayla's 21st birthday. The application is an interactive, multi-scene experience built with Phaser 3 game engine. It features:
+
+1. **EnvelopeScene**: Opening animation with confetti explosion, screen flash effect, and camera zoom
+2. **LetterScene**: Letter display with parallax background, sparkle effects, and interactive CTA button
+3. **RPGScene**: Quest-based exploration game where players collect 5 birthday tokens scattered across the map
+4. **DialogScene**: Dedicated scene for NPC interactions with smooth animations
 
 The application is a full-stack TypeScript project using Express.js for the backend API server and React with Vite for the frontend. It includes a complete UI component library based on Radix UI primitives and Tailwind CSS for styling.
+
+## Recent Improvements (October 2025)
+
+**Visual Enhancements:**
+- Confetti particle explosions with 16 vibrant colors
+- Sparkle effects and parallax backgrounds
+- Player particle trail effects when moving
+- Vignette overlay for atmospheric depth
+- Golden glow effects around collectible tokens
+
+**Gameplay Features:**
+- Quest system with 5 collectible birthday tokens
+- Animated UI HUD showing quest objectives and progress
+- Dynamic NPC dialog based on quest completion status
+- Smooth camera following with improved easing (0.08 lerp)
+- Better interaction prompts with icons and animations
+
+**Technical Improvements:**
+- Dedicated DialogScene for better NPC interactions
+- Proper memory management for particles and tweens
+- Optimized performance with tween guards
+- Clean object destruction when tokens are collected
 
 # User Preferences
 
@@ -18,12 +45,14 @@ Preferred communication style: Simple, everyday language.
 - Client-side routing would be handled by the application (currently single-page game)
 
 **Game Engine**: Phaser 3
-- Scene-based architecture with three main scenes:
-  - `EnvelopeScene`: Animated sprite-sheet based envelope opening
-  - `LetterScene`: Letter display with tween animations
-  - `RPGScene`: Top-down RPG exploration game with keyboard controls
+- Scene-based architecture with four main scenes:
+  - `EnvelopeScene`: Animated sprite-sheet based envelope opening with confetti and camera effects
+  - `LetterScene`: Letter display with parallax background, sparkle particles, and interactive button
+  - `RPGScene`: Quest-based top-down RPG with collectible tokens, HUD, particle effects, and vignette
+  - `DialogScene`: Modal dialog system for NPC interactions with proper pause/resume
 - Physics system configured (Arcade physics) but gravity disabled for top-down movement
-- Asset loading system for images and sprite sheets
+- Particle systems for visual effects (confetti, sparkles, trails, collection bursts)
+- Asset loading system for images, sprite sheets, and procedurally generated textures
 
 **State Management**: Zustand with middleware
 - `useGame` store: Manages game phase lifecycle (ready → playing → ended)
