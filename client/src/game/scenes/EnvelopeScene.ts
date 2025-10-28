@@ -116,8 +116,8 @@ export default class EnvelopeScene extends Phaser.Scene {
       this.createScreenFlash();
       this.createConfettiExplosion();
       
-      this.time.delayedCall(1200, () => {
-        this.cameras.main.fadeOut(500, 245, 230, 211);
+      this.time.delayedCall(400, () => {
+        this.cameras.main.fadeOut(200, 245, 230, 211);
         
         this.cameras.main.once('camerafadeoutcomplete', () => {
           this.scene.start('LetterScene');

@@ -119,7 +119,9 @@ export default class RPGScene extends Phaser.Scene {
       playerBody.setCollideWorldBounds(true);
       playerBody.setSize(this.player.width * 0.6, this.player.height * 0.4);
       playerBody.setOffset(this.player.width * 0.2, this.player.height * 0.5);
-      this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+      
+      this.cameras.main.setZoom(1.8);
+      this.cameras.main.startFollow(this.player, true, 0.15, 0.15);
       
       this.playerTrail = this.add.particles(0, 0, 'particle', {
         follow: this.player,
@@ -282,7 +284,7 @@ export default class RPGScene extends Phaser.Scene {
 
   private createNPC(width: number, height: number) {
     this.npc = this.add.sprite(width / 2 + 100, height / 2 - 50, 'npc');
-    this.npc.setScale(0.25);
+    this.npc.setScale(0.3);
     this.npc.setDepth(9);
     
     this.physics.add.existing(this.npc, true);
