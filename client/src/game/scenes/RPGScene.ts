@@ -26,7 +26,7 @@ export default class RPGScene extends Phaser.Scene {
   private isNearNPC: boolean = false;
   private tokens: BirthdayToken[] = [];
   private tokensCollected: number = 0;
-  private totalTokens: number = 5;
+  private totalTokens: number = 3;
   private hudContainer?: Phaser.GameObjects.Container;
   private tokenCountText?: Phaser.GameObjects.Text;
   private questText?: Phaser.GameObjects.Text;
@@ -39,29 +39,33 @@ export default class RPGScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('rpg-map', '/assets/rpg-map.png');
+    this.load.image('rpg-map', '/assets/forest-map.png');
     this.load.image('character', '/assets/character2.png');
     this.load.image('npc', '/assets/character1.png');
     this.load.audio('rpg-music', '/sounds/background.mp3');
     this.load.audio('collect', '/sounds/success.mp3');
     
-    this.createTokenTexture();
+    this.createHeartTexture();
     this.createParticleTexture();
   }
 
-  private createTokenTexture() {
+  private createHeartTexture() {
     const graphics = this.add.graphics();
     
-    graphics.fillStyle(0xFFD700, 1);
-    graphics.fillCircle(16, 16, 14);
+    graphics.fillStyle(0xFF1744, 1);
+    graphics.beginPath();
+    graphics.arc(12, 10, 6, Math.PI, 0, false);
+    graphics.arc(20, 10, 6, Math.PI, 0, false);
+    graphics.lineTo(26, 16);
+    graphics.lineTo(16, 26);
+    graphics.lineTo(6, 16);
+    graphics.closePath();
+    graphics.fillPath();
     
-    graphics.fillStyle(0xFFA500, 1);
-    graphics.fillCircle(16, 16, 10);
+    graphics.lineStyle(2, 0xFF69B4, 1);
+    graphics.strokePath();
     
-    graphics.fillStyle(0xFFD700, 1);
-    graphics.fillCircle(16, 16, 6);
-    
-    graphics.generateTexture('birthday-token', 32, 32);
+    graphics.generateTexture('heart', 32, 32);
     graphics.destroy();
   }
 
@@ -85,7 +89,7 @@ export default class RPGScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     map.setScale(scale);
 
-    this.player = this.add.sprite(width / 2, height / 2, 'character');
+    this.player = this.add.sprite(width / 2, height * 0.9, 'character');
     this.player.setScale(0.3);
     this.player.setDepth(10);
 
@@ -193,14 +197,14 @@ export default class RPGScene extends Phaser.Scene {
     const hudBg = this.add.rectangle(0, 0, 350, 100, 0x000000, 0.7);
     hudBg.setStrokeStyle(3, 0xFF6B9D);
     
-    this.questText = this.add.text(-160, -30, '🎂 Quest: Kumpulkan Token Ulang Tahun', {
+    this.questText = this.add.text(-160, -30, '💖 Quest: Kumpulkan 3 Hati', {
       fontSize: '16px',
-      color: '#FFD700',
+      color: '#FF1744',
       fontFamily: 'Arial',
       fontStyle: 'bold'
     });
     
-    this.tokenCountText = this.add.text(-160, 5, `✨ Token: ${this.tokensCollected}/${this.totalTokens}`, {
+    this.tokenCountText = this.add.text(-160, 5, `💕 Hati: ${this.tokensCollected}/${this.totalTokens}`, {
       fontSize: '18px',
       color: '#FFFFFF',
       fontFamily: 'Arial',
@@ -234,15 +238,13 @@ export default class RPGScene extends Phaser.Scene {
 
   private createBirthdayTokens(mapWidth: number, mapHeight: number) {
     const tokenPositions = [
-      { x: mapWidth * 0.2, y: mapHeight * 0.3 },
-      { x: mapWidth * 0.7, y: mapHeight * 0.25 },
-      { x: mapWidth * 0.3, y: mapHeight * 0.7 },
-      { x: mapWidth * 0.75, y: mapHeight * 0.65 },
-      { x: mapWidth * 0.5, y: mapHeight * 0.85 }
+      { x: mapWidth * 0.5, y: mapHeight * 0.7 },
+      { x: mapWidth * 0.5, y: mapHeight * 0.5 },
+      { x: mapWidth * 0.5, y: mapHeight * 0.3 }
     ];
     
     tokenPositions.forEach((pos, index) => {
-      const token = this.add.sprite(pos.x, pos.y, 'birthday-token');
+      const token = this.add.sprite(pos.x, pos.y, 'heart');
       token.setScale(1.2);
       token.setDepth(8);
       
@@ -265,7 +267,7 @@ export default class RPGScene extends Phaser.Scene {
         ease: 'Linear'
       });
       
-      const glow = this.add.circle(pos.x, pos.y, 25, 0xFFD700, 0.3);
+      const glow = this.add.circle(pos.x, pos.y, 25, 0xFF1744, 0.3);
       glow.setDepth(7);
       
       this.tweens.add({
@@ -283,7 +285,7 @@ export default class RPGScene extends Phaser.Scene {
   }
 
   private createNPC(width: number, height: number) {
-    this.npc = this.add.sprite(width / 2 + 100, height / 2 - 50, 'npc');
+    this.npc = this.add.sprite(width / 2, height * 0.1, 'npc');
     this.npc.setScale(0.3);
     this.npc.setDepth(9);
     
@@ -302,19 +304,9 @@ export default class RPGScene extends Phaser.Scene {
   private createCollisionZones(mapWidth: number, mapHeight: number) {
     this.collisionGroup = this.physics.add.staticGroup();
 
-    const tileSize = 50;
     const zones: Array<{x: number, y: number, width: number, height: number}> = [
-      { x: 0, y: 0, width: mapWidth * 0.15, height: mapHeight },
-      { x: 0, y: 0, width: mapWidth, height: mapHeight * 0.15 },
-      { x: mapWidth * 0.85, y: 0, width: mapWidth * 0.15, height: mapHeight },
-      { x: 0, y: mapHeight * 0.85, width: mapWidth, height: mapHeight * 0.15 },
-      
-      { x: mapWidth * 0.25, y: mapHeight * 0.15, width: mapWidth * 0.15, height: mapHeight * 0.25 },
-      { x: mapWidth * 0.6, y: mapHeight * 0.15, width: mapWidth * 0.25, height: mapHeight * 0.2 },
-      { x: mapWidth * 0.25, y: mapHeight * 0.65, width: mapWidth * 0.15, height: mapHeight * 0.2 },
-      { x: mapWidth * 0.6, y: mapHeight * 0.6, width: mapWidth * 0.25, height: mapHeight * 0.25 },
-      
-      { x: mapWidth * 0.4, y: mapHeight * 0.3, width: mapWidth * 0.15, height: mapHeight * 0.4 },
+      { x: 0, y: 0, width: mapWidth * 0.2, height: mapHeight },
+      { x: mapWidth * 0.8, y: 0, width: mapWidth * 0.2, height: mapHeight },
     ];
 
     zones.forEach(zone => {
@@ -441,9 +433,9 @@ export default class RPGScene extends Phaser.Scene {
           let message = '';
           
           if (this.tokensCollected < this.totalTokens) {
-            message = `Halo! Kamu sudah mengumpulkan ${this.tokensCollected}/${this.totalTokens} token ulang tahun! Coba jelajahi map dan kumpulkan semuanya! ✨`;
+            message = `Hei! Kamu sudah menemukan ${this.tokensCollected}/${this.totalTokens} hati! Terus cari ya, aku tunggu kamu di sini! 💕`;
           } else {
-            message = 'Selamat! Kamu sudah mengumpulkan semua token ulang tahun! 🎉🎂\n\nSelamat ulang tahun yang ke-21, Kayla! Semoga semua impianmu tercapai dan hari-harimu selalu penuh kebahagiaan, cinta, dan kesuksesan! Terima kasih sudah bermain! 💖';
+            message = 'Selamat! Kamu sudah menemukan semua hati! 💖\n\nSelamat ulang tahun yang ke-21, Kayla! Terima kasih sudah bermain dan menemukan semua hati yang aku tinggalkan untukmu. Semoga hari-harimu selalu penuh cinta dan kebahagiaan! 💝';
           }
           
           this.scene.pause();
@@ -471,7 +463,7 @@ export default class RPGScene extends Phaser.Scene {
     
     this.sound.play('collect', { volume: 0.5 });
     
-    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'birthday-token', {
+    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'heart', {
       speed: { min: 100, max: 200 },
       angle: { min: 0, max: 360 },
       scale: { start: 1, end: 0 },
@@ -498,7 +490,7 @@ export default class RPGScene extends Phaser.Scene {
     });
     
     if (this.tokenCountText) {
-      this.tokenCountText.setText(`✨ Token: ${this.tokensCollected}/${this.totalTokens}`);
+      this.tokenCountText.setText(`💕 Hati: ${this.tokensCollected}/${this.totalTokens}`);
       
       this.tweens.add({
         targets: this.tokenCountText,
@@ -510,7 +502,7 @@ export default class RPGScene extends Phaser.Scene {
     }
     
     if (this.tokensCollected === this.totalTokens && this.questText) {
-      this.questText.setText('🎉 Quest Selesai! Bicara dengan NPC!');
+      this.questText.setText('💝 Semua Hati Terkumpul! Temui Dia!');
       this.questText.setColor('#00FF00');
       
       this.tweens.add({
