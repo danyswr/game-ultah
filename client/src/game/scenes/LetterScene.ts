@@ -59,11 +59,11 @@ export default class LetterScene extends Phaser.Scene {
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
     this.slideSound.play();
 
-    // Animate letter sliding down to center with sparkles - FASTER!
+    // Animate letter sliding down to center with sparkles - SUPER FAST!
     this.tweens.add({
       targets: this.letter,
       y: height / 2,
-      duration: 300,
+      duration: 200,
       ease: 'Back.easeOut',
       onComplete: () => {
         console.log('Letter animation complete. Final position:', this.letter?.x, this.letter?.y);
@@ -201,10 +201,10 @@ export default class LetterScene extends Phaser.Scene {
         this.tweens.add({
           targets: this.proceedButton,
           scale: 0.9,
-          duration: 100,
+          duration: 50,
           yoyo: true,
           onComplete: () => {
-            this.cameras.main.fadeOut(300, 245, 230, 211);
+            this.cameras.main.fadeOut(150, 245, 230, 211);
             
             this.cameras.main.once('camerafadeoutcomplete', () => {
               this.scene.start('RPGScene');
