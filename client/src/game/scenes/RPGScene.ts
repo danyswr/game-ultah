@@ -104,14 +104,14 @@ export default class RPGScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    const levelWidth = width * 4;
+    const levelWidth = width * 3;
     const levelHeight = height;
 
     const map = this.add.image(0, 0, 'rpg-map');
     map.setOrigin(0, 0);
     map.setDisplaySize(levelWidth, levelHeight);
 
-    const groundY = height * 0.75;
+    const groundY = height * 0.7;
 
     this.player = this.add.sprite(200, groundY, 'girl-side-walking', 0);
     this.player.setScale(0.5);
@@ -121,7 +121,7 @@ export default class RPGScene extends Phaser.Scene {
       this.anims.create({
         key: 'girl-walk-side',
         frames: this.anims.generateFrameNumbers('girl-side-walking', { start: 0, end: 3 }),
-        frameRate: 10,
+        frameRate: 16,
         repeat: -1
       });
     }
@@ -158,7 +158,7 @@ export default class RPGScene extends Phaser.Scene {
       };
     }
 
-    const instructions = this.add.text(20, 20, 'Gunakan A/D atau Arrow Keys Kiri/Kanan untuk bergerak', {
+    const instructions = this.add.text(20, 20, 'Gunakan A/D atau ← → untuk bergerak kiri/kanan', {
       fontSize: '18px',
       color: '#ffffff',
       fontFamily: 'Arial',
@@ -265,7 +265,7 @@ export default class RPGScene extends Phaser.Scene {
       fontStyle: 'bold'
     });
     
-    const controlsText = this.add.text(-160, 30, '⌨️ WASD/Arrow: Gerak | E: Bicara', {
+    const controlsText = this.add.text(-160, 30, '⌨️ A/D atau ← →: Gerak | E: Bicara', {
       fontSize: '12px',
       color: '#AAAAAA',
       fontFamily: 'Arial'
@@ -354,6 +354,7 @@ export default class RPGScene extends Phaser.Scene {
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocityX(0);
+    body.setVelocityY(0);
 
     let moving = false;
     let newDirection = this.lastDirection;
@@ -363,18 +364,20 @@ export default class RPGScene extends Phaser.Scene {
       moving = true;
       newDirection = 'left';
       this.player.setFlipX(true);
+      console.log('Moving left');
     } else if (this.cursors?.right.isDown || this.wasd?.D.isDown) {
       body.setVelocityX(this.playerSpeed);
       moving = true;
       newDirection = 'right';
       this.player.setFlipX(false);
+      console.log('Moving right');
     }
 
     this.lastDirection = newDirection;
 
     if (moving) {
       if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== 'girl-walk-side') {
-        this.player.play('girl-walk-side');
+        this.player.play('girl-walk-side', true);
       }
     } else {
       if (this.player.anims.currentAnim?.key !== 'girl-idle-side') {
