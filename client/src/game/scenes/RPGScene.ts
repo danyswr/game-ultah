@@ -15,7 +15,7 @@ export default class RPGScene extends Phaser.Scene {
     S: Phaser.Input.Keyboard.Key;
     D: Phaser.Input.Keyboard.Key;
   };
-  private playerSpeed: number = 160;
+  private playerSpeed: number = 180;
   private walkingTween?: Phaser.Tweens.Tween;
   private lastDirection: string = 'down';
   private collisionGroup?: Phaser.Physics.Arcade.StaticGroup;
@@ -80,7 +80,7 @@ export default class RPGScene extends Phaser.Scene {
       this.anims.create({
         key: 'girl-walk',
         frames: this.anims.generateFrameNumbers('girl-walking', { start: 0, end: 3 }),
-        frameRate: 8,
+        frameRate: 12,
         repeat: -1
       });
     }
@@ -125,17 +125,18 @@ export default class RPGScene extends Phaser.Scene {
       playerBody.setOffset(this.player.width * 0.2, this.player.height * 0.5);
       
       this.cameras.main.setZoom(1.8);
-      this.cameras.main.startFollow(this.player, true, 0.15, 0.15);
+      this.cameras.main.startFollow(this.player, true, 0.2, 0.2);
       
       this.playerTrail = this.add.particles(0, 0, 'particle', {
         follow: this.player,
         followOffset: { x: 0, y: this.player.height * 0.15 },
-        speed: 20,
-        scale: { start: 1, end: 0 },
-        alpha: { start: 0.6, end: 0 },
-        lifespan: 400,
-        frequency: 50,
-        blendMode: 'ADD'
+        speed: { min: 10, max: 30 },
+        scale: { start: 1.5, end: 0 },
+        alpha: { start: 0.8, end: 0 },
+        lifespan: 600,
+        frequency: 30,
+        blendMode: 'ADD',
+        tint: [0xFFB6C1, 0xFF69B4, 0xFF1493]
       });
       this.playerTrail.setDepth(5);
     }
@@ -245,15 +246,15 @@ export default class RPGScene extends Phaser.Scene {
     
     tokenPositions.forEach((pos, index) => {
       const token = this.add.sprite(pos.x, pos.y, 'heart-sprite');
-      token.setScale(1.2);
+      token.setScale(1.4);
       token.setDepth(8);
       
       this.physics.add.existing(token, true);
       
       this.tweens.add({
         targets: token,
-        y: pos.y - 15,
-        duration: 1000 + index * 200,
+        y: pos.y - 20,
+        duration: 800 + index * 150,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -262,19 +263,28 @@ export default class RPGScene extends Phaser.Scene {
       this.tweens.add({
         targets: token,
         angle: 360,
-        duration: 3000,
+        duration: 2500,
         repeat: -1,
         ease: 'Linear'
       });
       
-      const glow = this.add.circle(pos.x, pos.y, 25, 0xFF1744, 0.3);
+      this.tweens.add({
+        targets: token,
+        scale: 1.5,
+        duration: 600,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      const glow = this.add.circle(pos.x, pos.y, 30, 0xFF1744, 0.4);
       glow.setDepth(7);
       
       this.tweens.add({
         targets: glow,
-        scale: 1.3,
+        scale: 1.5,
         alpha: 0.1,
-        duration: 1000,
+        duration: 800,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
