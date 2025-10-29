@@ -59,12 +59,12 @@ export default class LetterScene extends Phaser.Scene {
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
     this.slideSound.play();
 
-    // Animate letter sliding down to center with sparkles
+    // Animate letter sliding down to center with sparkles - FASTER!
     this.tweens.add({
       targets: this.letter,
       y: height / 2,
-      duration: 800,
-      ease: 'Cubic.easeOut',
+      duration: 300,
+      ease: 'Back.easeOut',
       onComplete: () => {
         console.log('Letter animation complete. Final position:', this.letter?.x, this.letter?.y);
         this.createSparkleEffect();
