@@ -43,20 +43,10 @@ export default class EnvelopeScene extends Phaser.Scene {
     const background = this.add.rectangle(0, 0, width, height, 0xf5e6d3);
     background.setOrigin(0, 0);
 
-    // Create animated sprite using the spritesheet with scale animation
+    // Create animated sprite using the spritesheet - NO floating animation
     const envelopeSprite = this.add.sprite(width / 2, height / 2, 'envelope-animation');
     envelopeSprite.setOrigin(0.5, 0.5);
     envelopeSprite.setDisplaySize(400, 400);
-    
-    // Add gentle floating animation to envelope
-    this.tweens.add({
-      targets: envelopeSprite,
-      y: height / 2 - 10,
-      duration: 1500,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
     
     // Set to frame 0 (closed envelope)
     envelopeSprite.setFrame(0);
@@ -119,20 +109,12 @@ export default class EnvelopeScene extends Phaser.Scene {
     sprite.play('envelope-open');
     
     sprite.once('animationcomplete', () => {
-      console.log('Envelope animation complete - adding celebration effects');
+      console.log('Envelope animation complete - transitioning immediately');
       
       sprite.stop();
       
-      this.createScreenFlash();
-      this.createConfettiExplosion();
-      
-      this.time.delayedCall(100, () => {
-        this.cameras.main.fadeOut(150, 245, 230, 211);
-        
-        this.cameras.main.once('camerafadeoutcomplete', () => {
-          this.scene.start('LetterScene');
-        });
-      });
+      // Instant transition - no delays, no confetti
+      this.scene.start('LetterScene');
     });
   }
 

@@ -150,6 +150,7 @@ export default class RPGScene extends Phaser.Scene {
     this.cursors = this.input.keyboard?.createCursorKeys();
     
     if (this.input.keyboard) {
+      // Only A and D keys for left/right movement - NO vertical movement
       this.wasd = {
         W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
         A: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
@@ -178,7 +179,8 @@ export default class RPGScene extends Phaser.Scene {
       playerBody.setSize(this.player.width * 0.3, this.player.height * 0.5);
       playerBody.setOffset(this.player.width * 0.35, this.player.height * 0.4);
       
-      this.cameras.main.setZoom(1.5);
+      // Reduced zoom to show more of the character and prevent cutoff
+      this.cameras.main.setZoom(1.2);
       this.cameras.main.startFollow(this.player, true, 0.1, 0.05);
       
       this.playerTrail = this.add.particles(0, 0, 'particle', {
@@ -354,11 +356,13 @@ export default class RPGScene extends Phaser.Scene {
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     body.setVelocityX(0);
+    // Lock vertical movement completely
     body.setVelocityY(0);
 
     let moving = false;
     let newDirection = this.lastDirection;
 
+    // ONLY left/right movement - A/D and arrow keys, NO vertical movement
     if (this.cursors?.left.isDown || this.wasd?.A.isDown) {
       body.setVelocityX(-this.playerSpeed);
       moving = true;
@@ -372,6 +376,7 @@ export default class RPGScene extends Phaser.Scene {
       this.player.setFlipX(false);
       console.log('Moving right');
     }
+    // W/S and Up/Down arrows are completely ignored - no vertical movement allowed
 
     this.lastDirection = newDirection;
 

@@ -59,15 +59,14 @@ export default class LetterScene extends Phaser.Scene {
     this.slideSound = this.sound.add('letter-slide', { volume: 0.4 });
     this.slideSound.play();
 
-    // Animate letter sliding down to center with sparkles - SUPER FAST!
+    // Animate letter sliding down to center - INSTANT (150ms max)
     this.tweens.add({
       targets: this.letter,
       y: height / 2,
-      duration: 200,
+      duration: 150,
       ease: 'Back.easeOut',
       onComplete: () => {
         console.log('Letter animation complete. Final position:', this.letter?.x, this.letter?.y);
-        this.createSparkleEffect();
         this.canProceed = true;
         this.showTapText();
       }
@@ -153,16 +152,9 @@ export default class LetterScene extends Phaser.Scene {
     
     this.proceedButton = this.add.container(width / 2, height - 80, [buttonBg, buttonText]);
     this.proceedButton.setDepth(100);
-    this.proceedButton.setAlpha(0);
-    this.proceedButton.setScale(0.8);
-    
-    this.tweens.add({
-      targets: this.proceedButton,
-      alpha: 1,
-      scale: 1,
-      duration: 500,
-      ease: 'Back.easeOut'
-    });
+    // Show button immediately - no fade in animation
+    this.proceedButton.setAlpha(1);
+    this.proceedButton.setScale(1);
     
     this.tweens.add({
       targets: this.proceedButton,
@@ -198,19 +190,8 @@ export default class LetterScene extends Phaser.Scene {
         this.canProceed = false;
         console.log('Proceeding to RPG Scene');
         
-        this.tweens.add({
-          targets: this.proceedButton,
-          scale: 0.9,
-          duration: 50,
-          yoyo: true,
-          onComplete: () => {
-            this.cameras.main.fadeOut(150, 245, 230, 211);
-            
-            this.cameras.main.once('camerafadeoutcomplete', () => {
-              this.scene.start('RPGScene');
-            });
-          }
-        });
+        // Instant transition - no delays or animations
+        this.scene.start('RPGScene');
       }
     });
   }
