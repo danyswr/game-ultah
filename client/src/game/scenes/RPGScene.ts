@@ -40,16 +40,16 @@ export default class RPGScene extends Phaser.Scene {
 
   preload() {
     this.load.image('rpg-map', '/assets/forest-map.png');
-    this.load.spritesheet('girl-walking', '/assets/girl-walking.png', {
-      frameWidth: 96,
-      frameHeight: 128
+    this.load.spritesheet('girl-side-walking', '/assets/girl-side-walking.png', {
+      frameWidth: 256,
+      frameHeight: 256
     });
     this.load.image('npc', '/assets/character1.png');
-    this.load.image('heart-sprite', '/assets/heart-sprite.png');
     this.load.audio('rpg-music', '/sounds/background.mp3');
     this.load.audio('collect', '/sounds/success.mp3');
     
     this.createParticleTexture();
+    this.createHeartTextures();
   }
 
   private createParticleTexture() {
@@ -60,36 +60,90 @@ export default class RPGScene extends Phaser.Scene {
     graphics.destroy();
   }
 
+  private createHeartTextures() {
+    const graphics = this.add.graphics();
+    const frameCount = 8;
+    
+    for (let i = 0; i < frameCount; i++) {
+      graphics.clear();
+      
+      const rotation = (i / frameCount) * Math.PI * 2;
+      const scaleEffect = 1 + Math.sin(rotation) * 0.2;
+      
+      const points: number[] = [];
+      const segments = 50;
+      const centerX = 16;
+      const centerY = 16;
+      const size = 4 * scaleEffect;
+      
+      for (let j = 0; j <= segments; j++) {
+        const t = (j / segments) * Math.PI * 2;
+        
+        const hx = size * 16 * Math.pow(Math.sin(t), 3);
+        const hy = size * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 
+                          2 * Math.cos(3 * t) - Math.cos(4 * t));
+        
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        const rotatedX = hx * cos - hy * sin;
+        const rotatedY = hx * sin + hy * cos;
+        
+        points.push(centerX + rotatedX, centerY - rotatedY);
+      }
+      
+      graphics.fillStyle(0xFF1493, 1);
+      graphics.fillPoints(points, true);
+      
+      graphics.generateTexture(`heart-frame-${i}`, 32, 32);
+    }
+    
+    graphics.destroy();
+  }
+
   create() {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
+    const levelWidth = width * 4;
+    const levelHeight = height;
+
     const map = this.add.image(0, 0, 'rpg-map');
     map.setOrigin(0, 0);
-    
-    const scaleX = width / map.width;
-    const scaleY = height / map.height;
-    const scale = Math.max(scaleX, scaleY);
-    map.setScale(scale);
+    map.setDisplaySize(levelWidth, levelHeight);
 
-    this.player = this.add.sprite(width / 2, height * 0.9, 'girl-walking', 0);
-    this.player.setScale(0.4);
+    const groundY = height * 0.75;
+
+    this.player = this.add.sprite(200, groundY, 'girl-side-walking', 0);
+    this.player.setScale(0.5);
     this.player.setDepth(10);
     
-    if (!this.anims.exists('girl-walk')) {
+    if (!this.anims.exists('girl-walk-side')) {
       this.anims.create({
-        key: 'girl-walk',
-        frames: this.anims.generateFrameNumbers('girl-walking', { start: 0, end: 3 }),
-        frameRate: 12,
+        key: 'girl-walk-side',
+        frames: this.anims.generateFrameNumbers('girl-side-walking', { start: 0, end: 3 }),
+        frameRate: 10,
         repeat: -1
       });
     }
     
-    if (!this.anims.exists('girl-idle')) {
+    if (!this.anims.exists('girl-idle-side')) {
       this.anims.create({
-        key: 'girl-idle',
-        frames: [{ key: 'girl-walking', frame: 0 }],
+        key: 'girl-idle-side',
+        frames: [{ key: 'girl-side-walking', frame: 0 }],
         frameRate: 1
+      });
+    }
+    
+    if (!this.anims.exists('heart-spin')) {
+      const frames = [];
+      for (let i = 0; i < 8; i++) {
+        frames.push({ key: `heart-frame-${i}`, frame: 0 });
+      }
+      this.anims.create({
+        key: 'heart-spin',
+        frames: frames,
+        frameRate: 12,
+        repeat: -1
       });
     }
 
@@ -104,7 +158,7 @@ export default class RPGScene extends Phaser.Scene {
       };
     }
 
-    const instructions = this.add.text(20, 20, 'Gunakan WASD atau Arrow Keys untuk bergerak', {
+    const instructions = this.add.text(20, 20, 'Gunakan A/D atau Arrow Keys Kiri/Kanan untuk bergerak', {
       fontSize: '18px',
       color: '#ffffff',
       fontFamily: 'Arial',
@@ -114,22 +168,22 @@ export default class RPGScene extends Phaser.Scene {
     instructions.setDepth(100);
     instructions.setScrollFactor(0);
 
-    this.cameras.main.setBounds(0, 0, map.displayWidth, map.displayHeight);
-    this.physics.world.setBounds(0, 0, map.displayWidth, map.displayHeight);
+    this.cameras.main.setBounds(0, 0, levelWidth, levelHeight);
+    this.physics.world.setBounds(0, 0, levelWidth, levelHeight);
 
     if (this.player) {
       this.physics.add.existing(this.player);
       const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
       playerBody.setCollideWorldBounds(true);
-      playerBody.setSize(this.player.width * 0.6, this.player.height * 0.4);
-      playerBody.setOffset(this.player.width * 0.2, this.player.height * 0.5);
+      playerBody.setSize(this.player.width * 0.3, this.player.height * 0.5);
+      playerBody.setOffset(this.player.width * 0.35, this.player.height * 0.4);
       
-      this.cameras.main.setZoom(1.8);
-      this.cameras.main.startFollow(this.player, true, 0.2, 0.2);
+      this.cameras.main.setZoom(1.5);
+      this.cameras.main.startFollow(this.player, true, 0.1, 0.05);
       
       this.playerTrail = this.add.particles(0, 0, 'particle', {
         follow: this.player,
-        followOffset: { x: 0, y: this.player.height * 0.15 },
+        followOffset: { x: -20, y: this.player.height * 0.2 },
         speed: { min: 10, max: 30 },
         scale: { start: 1.5, end: 0 },
         alpha: { start: 0.8, end: 0 },
@@ -141,9 +195,8 @@ export default class RPGScene extends Phaser.Scene {
       this.playerTrail.setDepth(5);
     }
 
-    this.createCollisionZones(map.displayWidth, map.displayHeight);
-    this.createBirthdayTokens(map.displayWidth, map.displayHeight);
-    this.createNPC(width, height);
+    this.createBirthdayTokens(levelWidth, groundY);
+    this.createNPC(levelWidth, groundY);
     this.createVignette();
     this.createHUD();
 
@@ -237,54 +290,39 @@ export default class RPGScene extends Phaser.Scene {
     });
   }
 
-  private createBirthdayTokens(mapWidth: number, mapHeight: number) {
+  private createBirthdayTokens(levelWidth: number, groundY: number) {
     const tokenPositions = [
-      { x: mapWidth * 0.5, y: mapHeight * 0.7 },
-      { x: mapWidth * 0.5, y: mapHeight * 0.5 },
-      { x: mapWidth * 0.5, y: mapHeight * 0.3 }
+      { x: levelWidth * 0.3, y: groundY - 100 },
+      { x: levelWidth * 0.5, y: groundY - 150 },
+      { x: levelWidth * 0.75, y: groundY - 120 }
     ];
     
     tokenPositions.forEach((pos, index) => {
-      const token = this.add.sprite(pos.x, pos.y, 'heart-sprite');
-      token.setScale(1.4);
+      const token = this.add.sprite(pos.x, pos.y, 'heart-frame-0');
+      token.setScale(2.5);
       token.setDepth(8);
+      
+      token.play('heart-spin');
       
       this.physics.add.existing(token, true);
       
       this.tweens.add({
         targets: token,
         y: pos.y - 20,
-        duration: 800 + index * 150,
+        duration: 1000 + index * 200,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
       });
       
-      this.tweens.add({
-        targets: token,
-        angle: 360,
-        duration: 2500,
-        repeat: -1,
-        ease: 'Linear'
-      });
-      
-      this.tweens.add({
-        targets: token,
-        scale: 1.5,
-        duration: 600,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-      });
-      
-      const glow = this.add.circle(pos.x, pos.y, 30, 0xFF1744, 0.4);
+      const glow = this.add.circle(pos.x, pos.y, 40, 0xFF1744, 0.4);
       glow.setDepth(7);
       
       this.tweens.add({
         targets: glow,
         scale: 1.5,
         alpha: 0.1,
-        duration: 800,
+        duration: 1000,
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut'
@@ -294,9 +332,9 @@ export default class RPGScene extends Phaser.Scene {
     });
   }
 
-  private createNPC(width: number, height: number) {
-    this.npc = this.add.sprite(width / 2, height * 0.1, 'npc');
-    this.npc.setScale(0.3);
+  private createNPC(levelWidth: number, groundY: number) {
+    this.npc = this.add.sprite(levelWidth - 300, groundY, 'npc');
+    this.npc.setScale(0.4);
     this.npc.setDepth(9);
     
     this.physics.add.existing(this.npc, true);
@@ -311,37 +349,11 @@ export default class RPGScene extends Phaser.Scene {
     });
   }
 
-  private createCollisionZones(mapWidth: number, mapHeight: number) {
-    this.collisionGroup = this.physics.add.staticGroup();
-
-    const zones: Array<{x: number, y: number, width: number, height: number}> = [
-      { x: 0, y: 0, width: mapWidth * 0.2, height: mapHeight },
-      { x: mapWidth * 0.8, y: 0, width: mapWidth * 0.2, height: mapHeight },
-    ];
-
-    zones.forEach(zone => {
-      const rect = this.add.rectangle(
-        zone.x + zone.width / 2,
-        zone.y + zone.height / 2,
-        zone.width,
-        zone.height,
-        0x000000,
-        0
-      );
-      this.physics.add.existing(rect, true);
-      this.collisionGroup?.add(rect);
-    });
-
-    if (this.player && this.collisionGroup) {
-      this.physics.add.collider(this.player, this.collisionGroup);
-    }
-  }
-
   update() {
     if (!this.player || !this.player.body) return;
 
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    body.setVelocity(0);
+    body.setVelocityX(0);
 
     let moving = false;
     let newDirection = this.lastDirection;
@@ -358,28 +370,16 @@ export default class RPGScene extends Phaser.Scene {
       this.player.setFlipX(false);
     }
 
-    if (this.cursors?.up.isDown || this.wasd?.W.isDown) {
-      body.setVelocityY(-this.playerSpeed);
-      moving = true;
-      newDirection = 'up';
-    } else if (this.cursors?.down.isDown || this.wasd?.S.isDown) {
-      body.setVelocityY(this.playerSpeed);
-      moving = true;
-      newDirection = 'down';
-    }
-
-    if (moving && body.velocity.x !== 0 && body.velocity.y !== 0) {
-      body.velocity.normalize().scale(this.playerSpeed);
-    }
-
     this.lastDirection = newDirection;
 
     if (moving) {
-      if (!this.player.anims.isPlaying) {
-        this.player.play('girl-walk');
+      if (!this.player.anims.isPlaying || this.player.anims.currentAnim?.key !== 'girl-walk-side') {
+        this.player.play('girl-walk-side');
       }
     } else {
-      this.player.play('girl-idle', true);
+      if (this.player.anims.currentAnim?.key !== 'girl-idle-side') {
+        this.player.play('girl-idle-side', true);
+      }
     }
 
     this.tokens.forEach((tokenObj, index) => {
@@ -465,10 +465,10 @@ export default class RPGScene extends Phaser.Scene {
     
     this.sound.play('collect', { volume: 0.5 });
     
-    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'heart-sprite', {
+    const collectEmitter = this.add.particles(tokenObj.sprite.x, tokenObj.sprite.y, 'heart-frame-0', {
       speed: { min: 100, max: 200 },
       angle: { min: 0, max: 360 },
-      scale: { start: 1, end: 0 },
+      scale: { start: 2, end: 0 },
       alpha: { start: 1, end: 0 },
       lifespan: 800,
       quantity: 10,
